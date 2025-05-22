@@ -1,0 +1,164 @@
+services:
+  master11:
+    build: .
+    container_name: master11
+    hostname: master11
+    ports:
+      - "19870:9870"    
+      - "18088:8088"    
+      - "12181:2181"    
+      - "19000:9000"    
+    environment:
+      - HADOOP_NODENAME=nn1
+    volumes:
+      - hadoop_data_master11:/opt/hadoop/hdfs
+    networks:
+      - hadoop_net
+    healthcheck:
+      test: ["CMD-SHELL", "jps | grep -E 'NameNode|DFSZKFailoverController|ResourceManager'"]
+      interval: 30s
+      timeout: 10s
+      retries: 25
+      start_period: 10s
+
+  master22:
+    build: .
+    container_name: master22
+    hostname: master22
+    ports:
+      - "19871:9870"    
+      - "18089:8088"    
+      - "12182:2181"    
+      - "19001:9000"    
+    environment:
+      - HADOOP_NODENAME=nn2
+    volumes:
+      - hadoop_data_master22:/opt/hadoop/hdfs
+    networks:
+      - hadoop_net
+    depends_on:
+      - master11
+    healthcheck:
+      test: ["CMD-SHELL", "jps | grep -E 'NameNode|DFSZKFailoverController|ResourceManager'"]
+      interval: 30s
+      timeout: 10s
+      retries: 25
+      start_period: 10s
+
+  master33:
+    build: .
+    container_name: master33
+    hostname: master33
+    ports:
+      - "19872:9870"   
+      - "18090:8088"    
+      - "12183:2181"    
+      - "19002:9000"    
+    environment:
+      - HADOOP_NODENAME=nn3
+    volumes:
+      - hadoop_data_master33:/opt/hadoop/hdfs
+    networks:
+      - hadoop_net
+    depends_on:
+      - master11
+    healthcheck:
+      test: ["CMD-SHELL", "jps | grep -E 'NameNode|DFSZKFailoverController|ResourceManager'"]
+      interval: 30s
+      timeout: 10s
+      retries: 25
+      start_period: 10s
+
+  worker11:
+    build: .
+    container_name: worker11
+    hostname: worker11   
+    volumes:
+      - hadoop_data_worker1:/opt/hadoop/hdfs
+    networks:
+      - hadoop_net
+    depends_on:
+      master11:
+        condition: service_healthy
+      master22:
+        condition: service_healthy
+      master33:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "jps | grep -E 'DataNode|NodeManager'"]
+      interval: 30s
+      timeout: 10s
+      retries: 25
+
+  hmaster1:
+    build: .
+    container_name: hmaster1
+    hostname: hmaster1
+    volumes:
+      - ./ConfigHBase/hbase-site.xml:/opt/hbase/conf/hbase-site.xml
+      - hbase_data:/opt/hbase
+    ports:
+      - "16000:16000"
+      - "16010:16010"
+    networks:
+      - hadoop_net
+    depends_on:
+      worker11:
+        condition: service_healthy
+
+  hmaster2:
+    build: .
+    container_name: hmaster2
+    hostname: hmaster2
+    volumes:
+      - ./ConfigHBase/hbase-site.xml:/opt/hbase/conf/hbase-site.xml
+      - hbase_data:/opt/hbase
+    ports:
+      - "16001:16000"
+      - "16011:16010"
+    networks:
+      - hadoop_net
+    depends_on:
+      worker11:
+        condition: service_healthy
+
+  regionserver1:
+    build: .
+    container_name: regionserver1
+    hostname: regionserver1
+    volumes:
+      - ./ConfigHBase/hbase-site.xml:/opt/hbase/conf/hbase-site.xml
+      - hbase_data:/opt/hbase
+    networks:
+      - hadoop_net
+    depends_on:
+      hmaster1:
+        condition: service_started
+      hmaster2:
+        condition: service_started
+
+  regionserver2:
+    build: .
+    container_name: regionserver2
+    hostname: regionserver2
+    volumes:
+      - ./ConfigHBase/hbase-site.xml:/opt/hbase/conf/hbase-site.xml
+      - hbase_data:/opt/hbase
+    networks:
+      - hadoop_net
+    depends_on:
+      hmaster1:
+        condition: service_started
+      hmaster2:
+        condition: service_started
+
+volumes:
+  hadoop_data_master11:
+  hadoop_data_master22:
+  hadoop_data_master33:
+  hadoop_data_worker1:
+  hbase_data:
+
+networks:
+  hadoop_net:
+    driver: bridge
