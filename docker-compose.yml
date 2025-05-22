@@ -69,26 +69,7 @@ services:
       retries: 25
       start_period: 10s
 
-  worker11:
-    build: .
-    container_name: worker11
-    hostname: worker11   
-    volumes:
-      - hadoop_data_worker1:/opt/hadoop/hdfs
-    networks:
-      - hadoop_net
-    depends_on:
-      master11:
-        condition: service_healthy
-      master22:
-        condition: service_healthy
-      master33:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "jps | grep -E 'DataNode|NodeManager'"]
-      interval: 30s
-      timeout: 10s
-      retries: 25
+
 
   hmaster1:
     build: .
@@ -102,9 +83,6 @@ services:
       - "16010:16010"
     networks:
       - hadoop_net
-    depends_on:
-      worker11:
-        condition: service_healthy
 
   hmaster2:
     build: .
@@ -118,9 +96,6 @@ services:
       - "16011:16010"
     networks:
       - hadoop_net
-    depends_on:
-      worker11:
-        condition: service_healthy
 
   regionserver1:
     build: .
@@ -131,11 +106,6 @@ services:
       - hbase_data:/opt/hbase
     networks:
       - hadoop_net
-    depends_on:
-      hmaster1:
-        condition: service_started
-      hmaster2:
-        condition: service_started
 
   regionserver2:
     build: .
@@ -146,12 +116,6 @@ services:
       - hbase_data:/opt/hbase
     networks:
       - hadoop_net
-    depends_on:
-      hmaster1:
-        condition: service_started
-      hmaster2:
-        condition: service_started
-
   regionserver3:
     build: .
     container_name: regionserver3
@@ -161,11 +125,7 @@ services:
       - hbase_data:/opt/hbase
     networks:
       - hadoop_net
-    depends_on:
-      hmaster1:
-        condition: service_started
-      hmaster2:
-        condition: service_started
+
 
 volumes:
   hadoop_data_master11:

@@ -65,12 +65,15 @@ elif [[ "$HOSTNAME" == *"regionserver"* ]]; then
         sleep 20
         echo "Starting HBase RegionServer on $HOSTNAME..."
         # hbase regionserver start
+          hdfs --daemon start datanode
+          yarn --daemon start nodemanager
         hbase-daemon.sh start regionserver
         echo "HBase RegionServer started on $HOSTNAME."
 
 else
-  hdfs --daemon start datanode
-  yarn --daemon start nodemanager
+  echo "hello"
+#   hdfs --daemon start datanode
+#   yarn --daemon start nodemanager
 fi
 
 sleep infinity
