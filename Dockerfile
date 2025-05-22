@@ -7,6 +7,7 @@ ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 \
     PATH=$PATH:/opt/hadoop/bin:/opt/hadoop/sbin:/opt/zookeeper/bin:/opt/hbase/bin
 
 ENV HADOOP_CLASSPATH=$HADOOP_HOME/share/hadoop/tools/lib/*
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update && apt install -y \
     openjdk-8-jdk \
@@ -14,7 +15,11 @@ RUN apt update && apt install -y \
     openssh-server \
     netcat \
     net-tools \
-    sudo
+    sudo \
+    python3 \
+    python3-pip
+
+RUN pip3 install faker
 
 RUN addgroup hadoop
 RUN adduser --disabled-password --ingroup hadoop hadoop

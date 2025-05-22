@@ -152,6 +152,21 @@ services:
       hmaster2:
         condition: service_started
 
+  regionserver3:
+    build: .
+    container_name: regionserver3
+    hostname: regionserver3
+    volumes:
+      - ./ConfigHBase/hbase-site.xml:/opt/hbase/conf/hbase-site.xml
+      - hbase_data:/opt/hbase
+    networks:
+      - hadoop_net
+    depends_on:
+      hmaster1:
+        condition: service_started
+      hmaster2:
+        condition: service_started
+
 volumes:
   hadoop_data_master11:
   hadoop_data_master22:
